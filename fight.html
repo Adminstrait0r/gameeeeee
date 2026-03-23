@@ -15,13 +15,13 @@
         .log-entry {
             border-left: 3px solid #fbbf24;
         }
-        .attacking {
-            animation: shake 0.2s ease-in-out 0s 2;
-        }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
+        }
+        .attacking {
+            animation: shake 0.2s ease-in-out 0s 2;
         }
     </style>
 </head>
@@ -44,7 +44,7 @@
                 </div>
                 <div class="p-4">
                     <div id="playerImageContainer" class="flex justify-center mb-3">
-                        <img id="playerImage" src="https://via.placeholder.com/150x150?text=No+Unit" alt="Player" class="w-32 h-32 object-cover rounded-full border-4 border-blue-500">
+                        <img id="playerImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23ccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E" alt="Player" class="w-32 h-32 object-cover rounded-full border-4 border-blue-500">
                     </div>
                     <div class="text-center mb-3">
                         <h3 id="playerName" class="text-xl font-bold text-gray-800">No unit</h3>
@@ -77,7 +77,7 @@
                 </div>
                 <div class="p-4">
                     <div id="enemyImageContainer" class="flex justify-center mb-3">
-                        <img id="enemyImage" src="https://via.placeholder.com/150x150?text=No+Unit" alt="Enemy" class="w-32 h-32 object-cover rounded-full border-4 border-red-500">
+                        <img id="enemyImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23ccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E" alt="Enemy" class="w-32 h-32 object-cover rounded-full border-4 border-red-500">
                     </div>
                     <div class="text-center mb-3">
                         <h3 id="enemyName" class="text-xl font-bold text-gray-800">No unit</h3>
@@ -121,307 +121,311 @@
     </div>
 
     <script>
-        // Supabase configuration
-        const SUPABASE_URL = 'https://atcyykmikuidfitbgchw.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_F7WF15HzgLDsfe0BU9tgpQ_zBz8Ympu';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        (function() {
+            // Wait for DOM to be ready
+            document.addEventListener('DOMContentLoaded', () => {
+                // Supabase configuration
+                const SUPABASE_URL = 'https://atcyykmikuidfitbgchw.supabase.co';
+                const SUPABASE_KEY = 'sb_publishable_F7WF15HzgLDsfe0BU9tgpQ_zBz8Ympu';
+                const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Global data
-        let allPlayerUnits = [];
-        let allCampaignUnits = [];
-        let currentPlayer = null;      // { unitData, stats }
-        let currentEnemy = null;       // { unitData, stats }
-        let battleActive = false;
+                // Global data
+                let allPlayerUnits = [];
+                let allCampaignUnits = [];
+                let currentPlayer = null;      // { unitData, stats }
+                let currentEnemy = null;       // { unitData, stats }
+                let battleActive = false;
 
-        // DOM elements
-        const pullPlayerBtn = document.getElementById('pullPlayerBtn');
-        const pullEnemyBtn = document.getElementById('pullEnemyBtn');
-        const fightBtn = document.getElementById('fightBtn');
-        const battleLogDiv = document.getElementById('battleLog');
+                // DOM elements
+                const pullPlayerBtn = document.getElementById('pullPlayerBtn');
+                const pullEnemyBtn = document.getElementById('pullEnemyBtn');
+                const fightBtn = document.getElementById('fightBtn');
+                const battleLogDiv = document.getElementById('battleLog');
 
-        // Player display elements
-        const playerImg = document.getElementById('playerImage');
-        const playerName = document.getElementById('playerName');
-        const playerType = document.getElementById('playerType');
-        const playerHealthCurr = document.getElementById('playerHealthCurrent');
-        const playerHealthMax = document.getElementById('playerHealthMax');
-        const playerHealthBar = document.getElementById('playerHealthBar');
-        const playerAttackSpan = document.getElementById('playerAttack');
-        const playerDefenseSpan = document.getElementById('playerDefense');
-        const playerSpeedSpan = document.getElementById('playerSpeed');
-        const playerCritSpan = document.getElementById('playerCrit');
-        const playerDodgeSpan = document.getElementById('playerDodge');
+                // Player display elements
+                const playerImg = document.getElementById('playerImage');
+                const playerName = document.getElementById('playerName');
+                const playerType = document.getElementById('playerType');
+                const playerHealthCurr = document.getElementById('playerHealthCurrent');
+                const playerHealthMax = document.getElementById('playerHealthMax');
+                const playerHealthBar = document.getElementById('playerHealthBar');
+                const playerAttackSpan = document.getElementById('playerAttack');
+                const playerDefenseSpan = document.getElementById('playerDefense');
+                const playerSpeedSpan = document.getElementById('playerSpeed');
+                const playerCritSpan = document.getElementById('playerCrit');
+                const playerDodgeSpan = document.getElementById('playerDodge');
 
-        // Enemy display elements
-        const enemyImg = document.getElementById('enemyImage');
-        const enemyName = document.getElementById('enemyName');
-        const enemyType = document.getElementById('enemyType');
-        const enemyHealthCurr = document.getElementById('enemyHealthCurrent');
-        const enemyHealthMax = document.getElementById('enemyHealthMax');
-        const enemyHealthBar = document.getElementById('enemyHealthBar');
-        const enemyAttackSpan = document.getElementById('enemyAttack');
-        const enemyDefenseSpan = document.getElementById('enemyDefense');
-        const enemySpeedSpan = document.getElementById('enemySpeed');
-        const enemyCritSpan = document.getElementById('enemyCrit');
-        const enemyDodgeSpan = document.getElementById('enemyDodge');
+                // Enemy display elements
+                const enemyImg = document.getElementById('enemyImage');
+                const enemyName = document.getElementById('enemyName');
+                const enemyType = document.getElementById('enemyType');
+                const enemyHealthCurr = document.getElementById('enemyHealthCurrent');
+                const enemyHealthMax = document.getElementById('enemyHealthMax');
+                const enemyHealthBar = document.getElementById('enemyHealthBar');
+                const enemyAttackSpan = document.getElementById('enemyAttack');
+                const enemyDefenseSpan = document.getElementById('enemyDefense');
+                const enemySpeedSpan = document.getElementById('enemySpeed');
+                const enemyCritSpan = document.getElementById('enemyCrit');
+                const enemyDodgeSpan = document.getElementById('enemyDodge');
 
-        // Helper: random integer
-        function randomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
-
-        // Roll stats from unit ranges
-        function rollStats(unit) {
-            return {
-                health: randomInt(unit.health_min, unit.health_max),
-                attack: randomInt(unit.attack_min, unit.attack_max),
-                defense: randomInt(unit.defense_min, unit.defense_max),
-                speed: unit.attack_speed,
-                crit: unit.critical_chance,
-                dodge: unit.dodge_chance
-            };
-        }
-
-        // Weighted random for player units
-        function weightedRandom(units) {
-            const total = units.reduce((sum, u) => sum + u.gacha_weight, 0);
-            if (total === 0) return units[0];
-            let rand = Math.random() * total;
-            let cum = 0;
-            for (let u of units) {
-                cum += u.gacha_weight;
-                if (rand <= cum) return u;
-            }
-            return units[0];
-        }
-
-        // Load units from Supabase
-        async function loadUnits() {
-            const { data, error } = await supabase.from('gacha_units').select('*');
-            if (error) {
-                console.error('Error loading units:', error);
-                return;
-            }
-            allPlayerUnits = data.filter(u => u.category === 'player');
-            allCampaignUnits = data.filter(u => u.category === 'campaign');
-        }
-
-        // Pull a random player unit with weighted chance
-        function pullPlayer() {
-            if (!allPlayerUnits.length) {
-                addLog('No player units available!', 'error');
-                return false;
-            }
-            const unit = weightedRandom(allPlayerUnits);
-            const stats = rollStats(unit);
-            currentPlayer = { unitData: unit, stats: { ...stats, currentHealth: stats.health } };
-            updatePlayerUI();
-            addLog(`🎉 You pulled ${unit.name} (${unit.type})! Health: ${stats.health}, Attack: ${stats.attack}, Defense: ${stats.defense}, Speed: ${stats.speed}`, 'success');
-            return true;
-        }
-
-        // Pull a random campaign unit (uniform)
-        function pullEnemy() {
-            if (!allCampaignUnits.length) {
-                addLog('No campaign units available!', 'error');
-                return false;
-            }
-            const idx = Math.floor(Math.random() * allCampaignUnits.length);
-            const unit = allCampaignUnits[idx];
-            const stats = rollStats(unit);
-            currentEnemy = { unitData: unit, stats: { ...stats, currentHealth: stats.health } };
-            updateEnemyUI();
-            addLog(`👹 An enemy appears: ${unit.name} (${unit.type})! Health: ${stats.health}, Attack: ${stats.attack}, Defense: ${stats.defense}, Speed: ${stats.speed}`, 'warning');
-            return true;
-        }
-
-        // Update UI for player
-        function updatePlayerUI() {
-            if (!currentPlayer) {
-                playerName.innerText = 'No unit';
-                playerType.innerText = '';
-                playerHealthCurr.innerText = '0';
-                playerHealthMax.innerText = '0';
-                playerHealthBar.style.width = '0%';
-                playerAttackSpan.innerText = '-';
-                playerDefenseSpan.innerText = '-';
-                playerSpeedSpan.innerText = '-';
-                playerCritSpan.innerText = '-';
-                playerDodgeSpan.innerText = '-';
-                playerImg.src = 'https://via.placeholder.com/150x150?text=No+Unit';
-                return;
-            }
-            const u = currentPlayer.unitData;
-            const s = currentPlayer.stats;
-            playerName.innerText = u.name;
-            playerType.innerText = u.type;
-            playerHealthCurr.innerText = s.currentHealth;
-            playerHealthMax.innerText = s.health;
-            const percent = (s.currentHealth / s.health) * 100;
-            playerHealthBar.style.width = `${percent}%`;
-            playerAttackSpan.innerText = s.attack;
-            playerDefenseSpan.innerText = s.defense;
-            playerSpeedSpan.innerText = s.speed;
-            playerCritSpan.innerText = `${(s.crit * 100).toFixed(0)}%`;
-            playerDodgeSpan.innerText = `${(s.dodge * 100).toFixed(0)}%`;
-            playerImg.src = u.image_url || 'https://via.placeholder.com/150x150?text=No+Image';
-        }
-
-        function updateEnemyUI() {
-            if (!currentEnemy) {
-                enemyName.innerText = 'No unit';
-                enemyType.innerText = '';
-                enemyHealthCurr.innerText = '0';
-                enemyHealthMax.innerText = '0';
-                enemyHealthBar.style.width = '0%';
-                enemyAttackSpan.innerText = '-';
-                enemyDefenseSpan.innerText = '-';
-                enemySpeedSpan.innerText = '-';
-                enemyCritSpan.innerText = '-';
-                enemyDodgeSpan.innerText = '-';
-                enemyImg.src = 'https://via.placeholder.com/150x150?text=No+Unit';
-                return;
-            }
-            const u = currentEnemy.unitData;
-            const s = currentEnemy.stats;
-            enemyName.innerText = u.name;
-            enemyType.innerText = u.type;
-            enemyHealthCurr.innerText = s.currentHealth;
-            enemyHealthMax.innerText = s.health;
-            const percent = (s.currentHealth / s.health) * 100;
-            enemyHealthBar.style.width = `${percent}%`;
-            enemyAttackSpan.innerText = s.attack;
-            enemyDefenseSpan.innerText = s.defense;
-            enemySpeedSpan.innerText = s.speed;
-            enemyCritSpan.innerText = `${(s.crit * 100).toFixed(0)}%`;
-            enemyDodgeSpan.innerText = `${(s.dodge * 100).toFixed(0)}%`;
-            enemyImg.src = u.image_url || 'https://via.placeholder.com/150x150?text=No+Image';
-        }
-
-        // Add message to battle log
-        function addLog(msg, type = 'info') {
-            const div = document.createElement('div');
-            div.className = `log-entry pl-2 py-1 ${type === 'error' ? 'text-red-400' : type === 'success' ? 'text-green-400' : type === 'warning' ? 'text-yellow-400' : 'text-gray-300'}`;
-            div.innerText = msg;
-            battleLogDiv.appendChild(div);
-            div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        // Clear battle log
-        function clearLog() {
-            battleLogDiv.innerHTML = '';
-        }
-
-        // Apply dodge check
-        function checkDodge(unitName, dodgeChance) {
-            if (Math.random() < dodgeChance) {
-                addLog(`🌀 ${unitName} dodged the attack!`);
-                return true;
-            }
-            return false;
-        }
-
-        // Apply critical hit
-        function applyCrit(damage, critChance) {
-            if (Math.random() < critChance) {
-                addLog(`💥 CRITICAL HIT! Damage doubled.`);
-                return damage * 2;
-            }
-            return damage;
-        }
-
-        // Calculate damage: attack - defense (min 1)
-        function calcDamage(attackerStats, defenderStats) {
-            let dmg = Math.max(1, attackerStats.attack - defenderStats.defense);
-            dmg = applyCrit(dmg, attackerStats.crit);
-            return dmg;
-        }
-
-        // Perform an attack from attacker to defender
-        function attack(attackerName, attackerStats, defender, defenderStats) {
-            if (checkDodge(defender.name, defenderStats.dodge)) {
-                return 0; // no damage
-            }
-            let damage = calcDamage(attackerStats, defenderStats);
-            defenderStats.currentHealth -= damage;
-            if (defenderStats.currentHealth < 0) defenderStats.currentHealth = 0;
-            addLog(`⚔️ ${attackerName} hits ${defender.name} for ${damage} damage! (${defender.name} HP: ${defenderStats.currentHealth}/${defenderStats.health})`);
-            return damage;
-        }
-
-        // Main battle simulation
-        async function startBattle() {
-            if (!currentPlayer || !currentEnemy) {
-                addLog('❌ Both units must be pulled before fighting!', 'error');
-                return;
-            }
-            if (battleActive) {
-                addLog('Battle already in progress!', 'warning');
-                return;
-            }
-            battleActive = true;
-            fightBtn.disabled = true;
-            clearLog();
-            addLog('⚔️ BATTLE START! ⚔️');
-
-            // Copy stats to avoid modifying originals
-            let player = { ...currentPlayer.stats };
-            let enemy = { ...currentEnemy.stats };
-            let playerUnit = currentPlayer.unitData;
-            let enemyUnit = currentEnemy.unitData;
-
-            // Determine who attacks first based on speed
-            let turnOrder = player.speed >= enemy.speed ? ['player', 'enemy'] : ['enemy', 'player'];
-
-            // Battle loop
-            while (player.currentHealth > 0 && enemy.currentHealth > 0) {
-                for (let attacker of turnOrder) {
-                    if (player.currentHealth <= 0 || enemy.currentHealth <= 0) break;
-
-                    if (attacker === 'player') {
-                        attack(playerUnit.name, player, enemyUnit, enemy);
-                        updateEnemyUI();
-                    } else {
-                        attack(enemyUnit.name, enemy, playerUnit, player);
-                        updatePlayerUI();
-                    }
-                    // Small delay to see updates
-                    await new Promise(r => setTimeout(r, 500));
+                // Helper: random integer
+                function randomInt(min, max) {
+                    return Math.floor(Math.random() * (max - min + 1)) + min;
                 }
-            }
 
-            // Determine winner
-            if (player.currentHealth <= 0 && enemy.currentHealth <= 0) {
-                addLog('💀 IT\'S A DRAW! Both units fell! 💀', 'warning');
-            } else if (player.currentHealth <= 0) {
-                addLog(`💀 ${enemyUnit.name} VICTORIOUS! 💀`, 'error');
-            } else {
-                addLog(`🏆 ${playerUnit.name} VICTORIOUS! 🏆`, 'success');
-            }
+                // Roll stats from unit ranges
+                function rollStats(unit) {
+                    return {
+                        health: randomInt(unit.health_min, unit.health_max),
+                        attack: randomInt(unit.attack_min, unit.attack_max),
+                        defense: randomInt(unit.defense_min, unit.defense_max),
+                        speed: unit.attack_speed,
+                        crit: unit.critical_chance,
+                        dodge: unit.dodge_chance
+                    };
+                }
 
-            battleActive = false;
-            fightBtn.disabled = false;
-        }
+                // Weighted random for player units
+                function weightedRandom(units) {
+                    const total = units.reduce((sum, u) => sum + u.gacha_weight, 0);
+                    if (total === 0) return units[0];
+                    let rand = Math.random() * total;
+                    let cum = 0;
+                    for (let u of units) {
+                        cum += u.gacha_weight;
+                        if (rand <= cum) return u;
+                    }
+                    return units[0];
+                }
 
-        // Event listeners
-        pullPlayerBtn.onclick = async () => {
-            await loadUnits(); // ensure units loaded
-            pullPlayer();
-            fightBtn.disabled = !(currentPlayer && currentEnemy);
-        };
-        pullEnemyBtn.onclick = async () => {
-            await loadUnits();
-            pullEnemy();
-            fightBtn.disabled = !(currentPlayer && currentEnemy);
-        };
-        fightBtn.onclick = startBattle;
+                // Load units from Supabase
+                async function loadUnits() {
+                    const { data, error } = await supabaseClient.from('gacha_units').select('*');
+                    if (error) {
+                        console.error('Error loading units:', error);
+                        return;
+                    }
+                    allPlayerUnits = data.filter(u => u.category === 'player');
+                    allCampaignUnits = data.filter(u => u.category === 'campaign');
+                }
 
-        // Initial load
-        loadUnits().then(() => {
-            // Optionally pre-pull a random set for demonstration
-            if (allPlayerUnits.length) pullPlayer();
-            if (allCampaignUnits.length) pullEnemy();
-        });
+                // Pull a random player unit with weighted chance
+                function pullPlayer() {
+                    if (!allPlayerUnits.length) {
+                        addLog('No player units available!', 'error');
+                        return false;
+                    }
+                    const unit = weightedRandom(allPlayerUnits);
+                    const stats = rollStats(unit);
+                    currentPlayer = { unitData: unit, stats: { ...stats, currentHealth: stats.health } };
+                    updatePlayerUI();
+                    addLog(`🎉 You pulled ${unit.name} (${unit.type})! Health: ${stats.health}, Attack: ${stats.attack}, Defense: ${stats.defense}, Speed: ${stats.speed}`, 'success');
+                    return true;
+                }
+
+                // Pull a random campaign unit (uniform)
+                function pullEnemy() {
+                    if (!allCampaignUnits.length) {
+                        addLog('No campaign units available!', 'error');
+                        return false;
+                    }
+                    const idx = Math.floor(Math.random() * allCampaignUnits.length);
+                    const unit = allCampaignUnits[idx];
+                    const stats = rollStats(unit);
+                    currentEnemy = { unitData: unit, stats: { ...stats, currentHealth: stats.health } };
+                    updateEnemyUI();
+                    addLog(`👹 An enemy appears: ${unit.name} (${unit.type})! Health: ${stats.health}, Attack: ${stats.attack}, Defense: ${stats.defense}, Speed: ${stats.speed}`, 'warning');
+                    return true;
+                }
+
+                // Update UI for player
+                function updatePlayerUI() {
+                    if (!currentPlayer) {
+                        playerName.innerText = 'No unit';
+                        playerType.innerText = '';
+                        playerHealthCurr.innerText = '0';
+                        playerHealthMax.innerText = '0';
+                        playerHealthBar.style.width = '0%';
+                        playerAttackSpan.innerText = '-';
+                        playerDefenseSpan.innerText = '-';
+                        playerSpeedSpan.innerText = '-';
+                        playerCritSpan.innerText = '-';
+                        playerDodgeSpan.innerText = '-';
+                        playerImg.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"%3E%3Crect width="150" height="150" fill="%23ccc"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23666" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                        return;
+                    }
+                    const u = currentPlayer.unitData;
+                    const s = currentPlayer.stats;
+                    playerName.innerText = u.name;
+                    playerType.innerText = u.type;
+                    playerHealthCurr.innerText = s.currentHealth;
+                    playerHealthMax.innerText = s.health;
+                    const percent = (s.currentHealth / s.health) * 100;
+                    playerHealthBar.style.width = `${percent}%`;
+                    playerAttackSpan.innerText = s.attack;
+                    playerDefenseSpan.innerText = s.defense;
+                    playerSpeedSpan.innerText = s.speed;
+                    playerCritSpan.innerText = `${(s.crit * 100).toFixed(0)}%`;
+                    playerDodgeSpan.innerText = `${(s.dodge * 100).toFixed(0)}%`;
+                    playerImg.src = u.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"%3E%3Crect width="150" height="150" fill="%23ccc"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23666" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                }
+
+                function updateEnemyUI() {
+                    if (!currentEnemy) {
+                        enemyName.innerText = 'No unit';
+                        enemyType.innerText = '';
+                        enemyHealthCurr.innerText = '0';
+                        enemyHealthMax.innerText = '0';
+                        enemyHealthBar.style.width = '0%';
+                        enemyAttackSpan.innerText = '-';
+                        enemyDefenseSpan.innerText = '-';
+                        enemySpeedSpan.innerText = '-';
+                        enemyCritSpan.innerText = '-';
+                        enemyDodgeSpan.innerText = '-';
+                        enemyImg.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"%3E%3Crect width="150" height="150" fill="%23ccc"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23666" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                        return;
+                    }
+                    const u = currentEnemy.unitData;
+                    const s = currentEnemy.stats;
+                    enemyName.innerText = u.name;
+                    enemyType.innerText = u.type;
+                    enemyHealthCurr.innerText = s.currentHealth;
+                    enemyHealthMax.innerText = s.health;
+                    const percent = (s.currentHealth / s.health) * 100;
+                    enemyHealthBar.style.width = `${percent}%`;
+                    enemyAttackSpan.innerText = s.attack;
+                    enemyDefenseSpan.innerText = s.defense;
+                    enemySpeedSpan.innerText = s.speed;
+                    enemyCritSpan.innerText = `${(s.crit * 100).toFixed(0)}%`;
+                    enemyDodgeSpan.innerText = `${(s.dodge * 100).toFixed(0)}%`;
+                    enemyImg.src = u.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"%3E%3Crect width="150" height="150" fill="%23ccc"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23666" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                }
+
+                // Add message to battle log
+                function addLog(msg, type = 'info') {
+                    const div = document.createElement('div');
+                    div.className = `log-entry pl-2 py-1 ${type === 'error' ? 'text-red-400' : type === 'success' ? 'text-green-400' : type === 'warning' ? 'text-yellow-400' : 'text-gray-300'}`;
+                    div.innerText = msg;
+                    battleLogDiv.appendChild(div);
+                    div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+                // Clear battle log
+                function clearLog() {
+                    battleLogDiv.innerHTML = '';
+                }
+
+                // Apply dodge check
+                function checkDodge(unitName, dodgeChance) {
+                    if (Math.random() < dodgeChance) {
+                        addLog(`🌀 ${unitName} dodged the attack!`);
+                        return true;
+                    }
+                    return false;
+                }
+
+                // Apply critical hit
+                function applyCrit(damage, critChance) {
+                    if (Math.random() < critChance) {
+                        addLog(`💥 CRITICAL HIT! Damage doubled.`);
+                        return damage * 2;
+                    }
+                    return damage;
+                }
+
+                // Calculate damage: attack - defense (min 1)
+                function calcDamage(attackerStats, defenderStats) {
+                    let dmg = Math.max(1, attackerStats.attack - defenderStats.defense);
+                    dmg = applyCrit(dmg, attackerStats.crit);
+                    return dmg;
+                }
+
+                // Perform an attack from attacker to defender
+                function attack(attackerName, attackerStats, defender, defenderStats) {
+                    if (checkDodge(defender.name, defenderStats.dodge)) {
+                        return 0; // no damage
+                    }
+                    let damage = calcDamage(attackerStats, defenderStats);
+                    defenderStats.currentHealth -= damage;
+                    if (defenderStats.currentHealth < 0) defenderStats.currentHealth = 0;
+                    addLog(`⚔️ ${attackerName} hits ${defender.name} for ${damage} damage! (${defender.name} HP: ${defenderStats.currentHealth}/${defenderStats.health})`);
+                    return damage;
+                }
+
+                // Main battle simulation
+                async function startBattle() {
+                    if (!currentPlayer || !currentEnemy) {
+                        addLog('❌ Both units must be pulled before fighting!', 'error');
+                        return;
+                    }
+                    if (battleActive) {
+                        addLog('Battle already in progress!', 'warning');
+                        return;
+                    }
+                    battleActive = true;
+                    fightBtn.disabled = true;
+                    clearLog();
+                    addLog('⚔️ BATTLE START! ⚔️');
+
+                    // Copy stats to avoid modifying originals
+                    let player = { ...currentPlayer.stats };
+                    let enemy = { ...currentEnemy.stats };
+                    let playerUnit = currentPlayer.unitData;
+                    let enemyUnit = currentEnemy.unitData;
+
+                    // Determine who attacks first based on speed
+                    let turnOrder = player.speed >= enemy.speed ? ['player', 'enemy'] : ['enemy', 'player'];
+
+                    // Battle loop
+                    while (player.currentHealth > 0 && enemy.currentHealth > 0) {
+                        for (let attacker of turnOrder) {
+                            if (player.currentHealth <= 0 || enemy.currentHealth <= 0) break;
+
+                            if (attacker === 'player') {
+                                attack(playerUnit.name, player, enemyUnit, enemy);
+                                updateEnemyUI();
+                            } else {
+                                attack(enemyUnit.name, enemy, playerUnit, player);
+                                updatePlayerUI();
+                            }
+                            // Small delay to see updates
+                            await new Promise(r => setTimeout(r, 500));
+                        }
+                    }
+
+                    // Determine winner
+                    if (player.currentHealth <= 0 && enemy.currentHealth <= 0) {
+                        addLog('💀 IT\'S A DRAW! Both units fell! 💀', 'warning');
+                    } else if (player.currentHealth <= 0) {
+                        addLog(`💀 ${enemyUnit.name} VICTORIOUS! 💀`, 'error');
+                    } else {
+                        addLog(`🏆 ${playerUnit.name} VICTORIOUS! 🏆`, 'success');
+                    }
+
+                    battleActive = false;
+                    fightBtn.disabled = false;
+                }
+
+                // Event listeners
+                pullPlayerBtn.onclick = async () => {
+                    await loadUnits();
+                    pullPlayer();
+                    fightBtn.disabled = !(currentPlayer && currentEnemy);
+                };
+                pullEnemyBtn.onclick = async () => {
+                    await loadUnits();
+                    pullEnemy();
+                    fightBtn.disabled = !(currentPlayer && currentEnemy);
+                };
+                fightBtn.onclick = startBattle;
+
+                // Initial load and optional auto-pull
+                loadUnits().then(() => {
+                    if (allPlayerUnits.length) pullPlayer();
+                    if (allCampaignUnits.length) pullEnemy();
+                });
+            });
+        })();
     </script>
 </body>
 </html>
