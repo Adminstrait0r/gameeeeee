@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Battle Arena - Player vs Campaign</title>
-    <!-- Tailwind CSS -->
+    <title>Battle Arena - Real-time Action Bars</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .health-bar {
-            transition: width 0.3s ease;
+        .health-bar, .action-bar {
+            transition: width 0.1s linear;
         }
         .log-entry {
             border-left: 3px solid #fbbf24;
@@ -28,7 +26,7 @@
 <body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-4xl font-bold text-white">⚔️ Battle Arena ⚔️</h1>
+            <h1 class="text-4xl font-bold text-white">⚔️ Real‑time Battle Arena ⚔️</h1>
             <div class="space-x-4">
                 <a href="index.html" class="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition">📋 Manager</a>
                 <a href="gacha.html" class="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition">🎲 Gacha Pull</a>
@@ -43,8 +41,8 @@
                     <h2 class="text-xl font-bold">🔥 PLAYER UNIT 🔥</h2>
                 </div>
                 <div class="p-4">
-                    <div id="playerImageContainer" class="flex justify-center mb-3">
-                        <img id="playerImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23ccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E" alt="Player" class="w-32 h-32 object-cover rounded-full border-4 border-blue-500">
+                    <div class="flex justify-center mb-3">
+                        <img id="playerImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23ccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E" class="w-32 h-32 object-cover rounded-full border-4 border-blue-500">
                     </div>
                     <div class="text-center mb-3">
                         <h3 id="playerName" class="text-xl font-bold text-gray-800">No unit</h3>
@@ -59,12 +57,21 @@
                             <div id="playerHealthBar" class="health-bar bg-red-600 h-2.5 rounded-full" style="width: 0%"></div>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>⚡ Action Bar</span>
+                            <span id="playerActionText">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="playerActionBar" class="action-bar bg-yellow-500 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-3 gap-2 text-center text-sm mb-3">
-                        <div class="bg-orange-100 p-1 rounded">⚔️ Atk<br><span id="playerAttack" class="font-bold">-</span></div>
-                        <div class="bg-green-100 p-1 rounded">🛡️ Def<br><span id="playerDefense" class="font-bold">-</span></div>
-                        <div class="bg-blue-100 p-1 rounded">⚡ Spd<br><span id="playerSpeed" class="font-bold">-</span></div>
-                        <div class="bg-purple-100 p-1 rounded">💥 Crit<br><span id="playerCrit" class="font-bold">-</span></div>
-                        <div class="bg-gray-100 p-1 rounded">🌀 Dodge<br><span id="playerDodge" class="font-bold">-</span></div>
+                        <div class="bg-orange-100 p-1 rounded">⚔️ Atk<br><span id="playerAttack">-</span></div>
+                        <div class="bg-green-100 p-1 rounded">🛡️ Def<br><span id="playerDefense">-</span></div>
+                        <div class="bg-blue-100 p-1 rounded">⚡ Spd<br><span id="playerSpeed">-</span></div>
+                        <div class="bg-purple-100 p-1 rounded">💥 Crit<br><span id="playerCrit">-</span></div>
+                        <div class="bg-gray-100 p-1 rounded">🌀 Dodge<br><span id="playerDodge">-</span></div>
                     </div>
                     <button id="pullPlayerBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">🎲 Pull Player Unit</button>
                 </div>
@@ -76,8 +83,8 @@
                     <h2 class="text-xl font-bold">👹 CAMPAIGN ENEMY 👹</h2>
                 </div>
                 <div class="p-4">
-                    <div id="enemyImageContainer" class="flex justify-center mb-3">
-                        <img id="enemyImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23ccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E" alt="Enemy" class="w-32 h-32 object-cover rounded-full border-4 border-red-500">
+                    <div class="flex justify-center mb-3">
+                        <img id="enemyImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23ccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E" class="w-32 h-32 object-cover rounded-full border-4 border-red-500">
                     </div>
                     <div class="text-center mb-3">
                         <h3 id="enemyName" class="text-xl font-bold text-gray-800">No unit</h3>
@@ -92,12 +99,21 @@
                             <div id="enemyHealthBar" class="health-bar bg-red-600 h-2.5 rounded-full" style="width: 0%"></div>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>⚡ Action Bar</span>
+                            <span id="enemyActionText">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="enemyActionBar" class="action-bar bg-yellow-500 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-3 gap-2 text-center text-sm mb-3">
-                        <div class="bg-orange-100 p-1 rounded">⚔️ Atk<br><span id="enemyAttack" class="font-bold">-</span></div>
-                        <div class="bg-green-100 p-1 rounded">🛡️ Def<br><span id="enemyDefense" class="font-bold">-</span></div>
-                        <div class="bg-blue-100 p-1 rounded">⚡ Spd<br><span id="enemySpeed" class="font-bold">-</span></div>
-                        <div class="bg-purple-100 p-1 rounded">💥 Crit<br><span id="enemyCrit" class="font-bold">-</span></div>
-                        <div class="bg-gray-100 p-1 rounded">🌀 Dodge<br><span id="enemyDodge" class="font-bold">-</span></div>
+                        <div class="bg-orange-100 p-1 rounded">⚔️ Atk<br><span id="enemyAttack">-</span></div>
+                        <div class="bg-green-100 p-1 rounded">🛡️ Def<br><span id="enemyDefense">-</span></div>
+                        <div class="bg-blue-100 p-1 rounded">⚡ Spd<br><span id="enemySpeed">-</span></div>
+                        <div class="bg-purple-100 p-1 rounded">💥 Crit<br><span id="enemyCrit">-</span></div>
+                        <div class="bg-gray-100 p-1 rounded">🌀 Dodge<br><span id="enemyDodge">-</span></div>
                     </div>
                     <button id="pullEnemyBtn" class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition">🎲 Pull Enemy Unit</button>
                 </div>
@@ -105,8 +121,9 @@
         </div>
 
         <!-- Battle Controls -->
-        <div class="max-w-3xl mx-auto mb-8">
-            <button id="fightBtn" class="w-full bg-yellow-500 text-gray-900 font-bold py-3 rounded-lg text-xl hover:bg-yellow-400 transition disabled:opacity-50" disabled>⚔️ FIGHT! ⚔️</button>
+        <div class="max-w-3xl mx-auto mb-8 flex gap-4">
+            <button id="fightBtn" class="flex-1 bg-yellow-500 text-gray-900 font-bold py-3 rounded-lg text-xl hover:bg-yellow-400 transition disabled:opacity-50" disabled>⚔️ START BATTLE ⚔️</button>
+            <button id="stopBtn" class="bg-gray-600 text-white font-bold py-3 rounded-lg text-xl hover:bg-gray-500 transition disabled:opacity-50" disabled>⏹️ STOP</button>
         </div>
 
         <!-- Battle Log -->
@@ -115,65 +132,68 @@
                 <h3 class="font-bold">📜 Battle Log</h3>
             </div>
             <div id="battleLog" class="p-4 h-64 overflow-y-auto space-y-2 text-sm">
-                <div class="text-gray-400 italic">Select units and start the battle...</div>
+                <div class="text-gray-400 italic">Pull units and start the battle...</div>
             </div>
         </div>
     </div>
 
     <script>
         (function() {
-            // Wait for DOM to be ready
             document.addEventListener('DOMContentLoaded', () => {
-                // Supabase configuration
                 const SUPABASE_URL = 'https://atcyykmikuidfitbgchw.supabase.co';
                 const SUPABASE_KEY = 'sb_publishable_F7WF15HzgLDsfe0BU9tgpQ_zBz8Ympu';
                 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-                // Global data
                 let allPlayerUnits = [];
                 let allCampaignUnits = [];
-                let currentPlayer = null;      // { unitData, stats }
-                let currentEnemy = null;       // { unitData, stats }
+                let currentPlayer = null;      // { unitData, stats, actionCharge }
+                let currentEnemy = null;       // { unitData, stats, actionCharge }
                 let battleActive = false;
+                let battleInterval = null;
+                let lastTimestamp = 0;
 
                 // DOM elements
                 const pullPlayerBtn = document.getElementById('pullPlayerBtn');
                 const pullEnemyBtn = document.getElementById('pullEnemyBtn');
                 const fightBtn = document.getElementById('fightBtn');
+                const stopBtn = document.getElementById('stopBtn');
                 const battleLogDiv = document.getElementById('battleLog');
 
-                // Player display elements
+                // Player display
                 const playerImg = document.getElementById('playerImage');
                 const playerName = document.getElementById('playerName');
                 const playerType = document.getElementById('playerType');
                 const playerHealthCurr = document.getElementById('playerHealthCurrent');
                 const playerHealthMax = document.getElementById('playerHealthMax');
                 const playerHealthBar = document.getElementById('playerHealthBar');
+                const playerActionBar = document.getElementById('playerActionBar');
+                const playerActionText = document.getElementById('playerActionText');
                 const playerAttackSpan = document.getElementById('playerAttack');
                 const playerDefenseSpan = document.getElementById('playerDefense');
                 const playerSpeedSpan = document.getElementById('playerSpeed');
                 const playerCritSpan = document.getElementById('playerCrit');
                 const playerDodgeSpan = document.getElementById('playerDodge');
 
-                // Enemy display elements
+                // Enemy display
                 const enemyImg = document.getElementById('enemyImage');
                 const enemyName = document.getElementById('enemyName');
                 const enemyType = document.getElementById('enemyType');
                 const enemyHealthCurr = document.getElementById('enemyHealthCurrent');
                 const enemyHealthMax = document.getElementById('enemyHealthMax');
                 const enemyHealthBar = document.getElementById('enemyHealthBar');
+                const enemyActionBar = document.getElementById('enemyActionBar');
+                const enemyActionText = document.getElementById('enemyActionText');
                 const enemyAttackSpan = document.getElementById('enemyAttack');
                 const enemyDefenseSpan = document.getElementById('enemyDefense');
                 const enemySpeedSpan = document.getElementById('enemySpeed');
                 const enemyCritSpan = document.getElementById('enemyCrit');
                 const enemyDodgeSpan = document.getElementById('enemyDodge');
 
-                // Helper: random integer
+                // Helper functions
                 function randomInt(min, max) {
                     return Math.floor(Math.random() * (max - min + 1)) + min;
                 }
 
-                // Roll stats from unit ranges
                 function rollStats(unit) {
                     return {
                         health: randomInt(unit.health_min, unit.health_max),
@@ -185,7 +205,6 @@
                     };
                 }
 
-                // Weighted random for player units
                 function weightedRandom(units) {
                     const total = units.reduce((sum, u) => sum + u.gacha_weight, 0);
                     if (total === 0) return units[0];
@@ -198,7 +217,6 @@
                     return units[0];
                 }
 
-                // Load units from Supabase
                 async function loadUnits() {
                     const { data, error } = await supabaseClient.from('gacha_units').select('*');
                     if (error) {
@@ -209,7 +227,6 @@
                     allCampaignUnits = data.filter(u => u.category === 'campaign');
                 }
 
-                // Pull a random player unit with weighted chance
                 function pullPlayer() {
                     if (!allPlayerUnits.length) {
                         addLog('No player units available!', 'error');
@@ -217,13 +234,16 @@
                     }
                     const unit = weightedRandom(allPlayerUnits);
                     const stats = rollStats(unit);
-                    currentPlayer = { unitData: unit, stats: { ...stats, currentHealth: stats.health } };
+                    currentPlayer = {
+                        unitData: unit,
+                        stats: { ...stats, currentHealth: stats.health },
+                        actionCharge: 0
+                    };
                     updatePlayerUI();
-                    addLog(`🎉 You pulled ${unit.name} (${unit.type})! Health: ${stats.health}, Attack: ${stats.attack}, Defense: ${stats.defense}, Speed: ${stats.speed}`, 'success');
+                    addLog(`🎉 You pulled ${unit.name} (${unit.type})! Speed: ${stats.speed} actions/sec`, 'success');
                     return true;
                 }
 
-                // Pull a random campaign unit (uniform)
                 function pullEnemy() {
                     if (!allCampaignUnits.length) {
                         addLog('No campaign units available!', 'error');
@@ -232,13 +252,16 @@
                     const idx = Math.floor(Math.random() * allCampaignUnits.length);
                     const unit = allCampaignUnits[idx];
                     const stats = rollStats(unit);
-                    currentEnemy = { unitData: unit, stats: { ...stats, currentHealth: stats.health } };
+                    currentEnemy = {
+                        unitData: unit,
+                        stats: { ...stats, currentHealth: stats.health },
+                        actionCharge: 0
+                    };
                     updateEnemyUI();
-                    addLog(`👹 An enemy appears: ${unit.name} (${unit.type})! Health: ${stats.health}, Attack: ${stats.attack}, Defense: ${stats.defense}, Speed: ${stats.speed}`, 'warning');
+                    addLog(`👹 Enemy appears: ${unit.name} (${unit.type})! Speed: ${stats.speed} actions/sec`, 'warning');
                     return true;
                 }
 
-                // Update UI for player
                 function updatePlayerUI() {
                     if (!currentPlayer) {
                         playerName.innerText = 'No unit';
@@ -246,6 +269,8 @@
                         playerHealthCurr.innerText = '0';
                         playerHealthMax.innerText = '0';
                         playerHealthBar.style.width = '0%';
+                        playerActionBar.style.width = '0%';
+                        playerActionText.innerText = '0%';
                         playerAttackSpan.innerText = '-';
                         playerDefenseSpan.innerText = '-';
                         playerSpeedSpan.innerText = '-';
@@ -260,14 +285,19 @@
                     playerType.innerText = u.type;
                     playerHealthCurr.innerText = s.currentHealth;
                     playerHealthMax.innerText = s.health;
-                    const percent = (s.currentHealth / s.health) * 100;
-                    playerHealthBar.style.width = `${percent}%`;
+                    const healthPercent = (s.currentHealth / s.health) * 100;
+                    playerHealthBar.style.width = `${healthPercent}%`;
                     playerAttackSpan.innerText = s.attack;
                     playerDefenseSpan.innerText = s.defense;
                     playerSpeedSpan.innerText = s.speed;
                     playerCritSpan.innerText = `${(s.crit * 100).toFixed(0)}%`;
                     playerDodgeSpan.innerText = `${(s.dodge * 100).toFixed(0)}%`;
                     playerImg.src = u.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"%3E%3Crect width="150" height="150" fill="%23ccc"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23666" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                    
+                    // Update action bar
+                    const chargePercent = (currentPlayer.actionCharge / 100) * 100;
+                    playerActionBar.style.width = `${chargePercent}%`;
+                    playerActionText.innerText = `${Math.floor(chargePercent)}%`;
                 }
 
                 function updateEnemyUI() {
@@ -277,6 +307,8 @@
                         enemyHealthCurr.innerText = '0';
                         enemyHealthMax.innerText = '0';
                         enemyHealthBar.style.width = '0%';
+                        enemyActionBar.style.width = '0%';
+                        enemyActionText.innerText = '0%';
                         enemyAttackSpan.innerText = '-';
                         enemyDefenseSpan.innerText = '-';
                         enemySpeedSpan.innerText = '-';
@@ -291,17 +323,20 @@
                     enemyType.innerText = u.type;
                     enemyHealthCurr.innerText = s.currentHealth;
                     enemyHealthMax.innerText = s.health;
-                    const percent = (s.currentHealth / s.health) * 100;
-                    enemyHealthBar.style.width = `${percent}%`;
+                    const healthPercent = (s.currentHealth / s.health) * 100;
+                    enemyHealthBar.style.width = `${healthPercent}%`;
                     enemyAttackSpan.innerText = s.attack;
                     enemyDefenseSpan.innerText = s.defense;
                     enemySpeedSpan.innerText = s.speed;
                     enemyCritSpan.innerText = `${(s.crit * 100).toFixed(0)}%`;
                     enemyDodgeSpan.innerText = `${(s.dodge * 100).toFixed(0)}%`;
                     enemyImg.src = u.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"%3E%3Crect width="150" height="150" fill="%23ccc"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23666" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                    
+                    const chargePercent = (currentEnemy.actionCharge / 100) * 100;
+                    enemyActionBar.style.width = `${chargePercent}%`;
+                    enemyActionText.innerText = `${Math.floor(chargePercent)}%`;
                 }
 
-                // Add message to battle log
                 function addLog(msg, type = 'info') {
                     const div = document.createElement('div');
                     div.className = `log-entry pl-2 py-1 ${type === 'error' ? 'text-red-400' : type === 'success' ? 'text-green-400' : type === 'warning' ? 'text-yellow-400' : 'text-gray-300'}`;
@@ -310,12 +345,11 @@
                     div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
 
-                // Clear battle log
                 function clearLog() {
                     battleLogDiv.innerHTML = '';
                 }
 
-                // Apply dodge check
+                // Attack mechanics
                 function checkDodge(unitName, dodgeChance) {
                     if (Math.random() < dodgeChance) {
                         addLog(`🌀 ${unitName} dodged the attack!`);
@@ -324,36 +358,97 @@
                     return false;
                 }
 
-                // Apply critical hit
                 function applyCrit(damage, critChance) {
                     if (Math.random() < critChance) {
-                        addLog(`💥 CRITICAL HIT! Damage doubled.`);
+                        addLog(`💥 CRITICAL HIT!`);
                         return damage * 2;
                     }
                     return damage;
                 }
 
-                // Calculate damage: attack - defense (min 1)
                 function calcDamage(attackerStats, defenderStats) {
                     let dmg = Math.max(1, attackerStats.attack - defenderStats.defense);
                     dmg = applyCrit(dmg, attackerStats.crit);
                     return dmg;
                 }
 
-                // Perform an attack from attacker to defender
-                function attack(attackerName, attackerStats, defender, defenderStats) {
-                    if (checkDodge(defender.name, defenderStats.dodge)) {
-                        return 0; // no damage
-                    }
-                    let damage = calcDamage(attackerStats, defenderStats);
+                function performAttack(attacker, attackerName, defender, defenderStats) {
+                    if (checkDodge(defender.name, defenderStats.dodge)) return 0;
+                    let damage = calcDamage(attacker.stats, defenderStats);
                     defenderStats.currentHealth -= damage;
                     if (defenderStats.currentHealth < 0) defenderStats.currentHealth = 0;
                     addLog(`⚔️ ${attackerName} hits ${defender.name} for ${damage} damage! (${defender.name} HP: ${defenderStats.currentHealth}/${defenderStats.health})`);
                     return damage;
                 }
 
-                // Main battle simulation
-                async function startBattle() {
+                // Real-time update: called every frame (approx 60 fps)
+                function updateBattle(deltaTime) {
+                    if (!battleActive) return;
+                    if (!currentPlayer || !currentEnemy) return;
+
+                    // Increase action charge based on speed (actions per second)
+                    // Charge increases by (speed * deltaTime) per second, up to 100
+                    let chargeDelta = deltaTime; // seconds
+                    currentPlayer.actionCharge += currentPlayer.stats.speed * chargeDelta * 100; // multiply by 100 to get percentage
+                    currentEnemy.actionCharge += currentEnemy.stats.speed * chargeDelta * 100;
+
+                    // Cap at 100
+                    if (currentPlayer.actionCharge > 100) currentPlayer.actionCharge = 100;
+                    if (currentEnemy.actionCharge > 100) currentEnemy.actionCharge = 100;
+
+                    // Check for attacks when charge reaches 100
+                    // Process both in order of who reached 100 first (or simultaneously)
+                    let attacked = false;
+                    if (currentPlayer.actionCharge >= 100 && currentPlayer.stats.currentHealth > 0) {
+                        performAttack(currentPlayer, currentPlayer.unitData.name, currentEnemy.unitData, currentEnemy.stats);
+                        currentPlayer.actionCharge = 0;
+                        attacked = true;
+                    }
+                    if (currentEnemy.actionCharge >= 100 && currentEnemy.stats.currentHealth > 0) {
+                        performAttack(currentEnemy, currentEnemy.unitData.name, currentPlayer.unitData, currentPlayer.stats);
+                        currentEnemy.actionCharge = 0;
+                        attacked = true;
+                    }
+
+                    if (attacked) {
+                        updatePlayerUI();
+                        updateEnemyUI();
+                        // Check for death
+                        if (currentPlayer.stats.currentHealth <= 0 || currentEnemy.stats.currentHealth <= 0) {
+                            endBattle();
+                        }
+                    }
+
+                    // Update UI for action bars
+                    const playerChargePercent = (currentPlayer.actionCharge / 100) * 100;
+                    playerActionBar.style.width = `${playerChargePercent}%`;
+                    playerActionText.innerText = `${Math.floor(playerChargePercent)}%`;
+                    const enemyChargePercent = (currentEnemy.actionCharge / 100) * 100;
+                    enemyActionBar.style.width = `${enemyChargePercent}%`;
+                    enemyActionText.innerText = `${Math.floor(enemyChargePercent)}%`;
+                }
+
+                function endBattle() {
+                    if (!battleActive) return;
+                    battleActive = false;
+                    if (battleInterval) {
+                        cancelAnimationFrame(battleInterval);
+                        battleInterval = null;
+                    }
+                    if (currentPlayer && currentEnemy) {
+                        if (currentPlayer.stats.currentHealth <= 0 && currentEnemy.stats.currentHealth <= 0) {
+                            addLog('💀 IT\'S A DRAW! Both units fell! 💀', 'warning');
+                        } else if (currentPlayer.stats.currentHealth <= 0) {
+                            addLog(`💀 ${currentEnemy.unitData.name} VICTORIOUS! 💀`, 'error');
+                        } else {
+                            addLog(`🏆 ${currentPlayer.unitData.name} VICTORIOUS! 🏆`, 'success');
+                        }
+                    }
+                    fightBtn.disabled = false;
+                    stopBtn.disabled = true;
+                }
+
+                function startBattle() {
                     if (!currentPlayer || !currentEnemy) {
                         addLog('❌ Both units must be pulled before fighting!', 'error');
                         return;
@@ -362,64 +457,59 @@
                         addLog('Battle already in progress!', 'warning');
                         return;
                     }
+                    // Reset action charges
+                    currentPlayer.actionCharge = 0;
+                    currentEnemy.actionCharge = 0;
+                    updatePlayerUI();
+                    updateEnemyUI();
+                    clearLog();
+                    addLog('⚔️ BATTLE START! Real-time action bars based on attack speed! ⚔️');
                     battleActive = true;
                     fightBtn.disabled = true;
-                    clearLog();
-                    addLog('⚔️ BATTLE START! ⚔️');
+                    stopBtn.disabled = false;
 
-                    // Copy stats to avoid modifying originals
-                    let player = { ...currentPlayer.stats };
-                    let enemy = { ...currentEnemy.stats };
-                    let playerUnit = currentPlayer.unitData;
-                    let enemyUnit = currentEnemy.unitData;
-
-                    // Determine who attacks first based on speed
-                    let turnOrder = player.speed >= enemy.speed ? ['player', 'enemy'] : ['enemy', 'player'];
-
-                    // Battle loop
-                    while (player.currentHealth > 0 && enemy.currentHealth > 0) {
-                        for (let attacker of turnOrder) {
-                            if (player.currentHealth <= 0 || enemy.currentHealth <= 0) break;
-
-                            if (attacker === 'player') {
-                                attack(playerUnit.name, player, enemyUnit, enemy);
-                                updateEnemyUI();
-                            } else {
-                                attack(enemyUnit.name, enemy, playerUnit, player);
-                                updatePlayerUI();
-                            }
-                            // Small delay to see updates
-                            await new Promise(r => setTimeout(r, 500));
+                    let lastTime = performance.now();
+                    function frame(now) {
+                        if (!battleActive) return;
+                        let delta = Math.min(0.033, (now - lastTime) / 1000); // cap at 33ms to avoid huge jumps
+                        if (delta > 0) {
+                            updateBattle(delta);
                         }
+                        lastTime = now;
+                        battleInterval = requestAnimationFrame(frame);
                     }
+                    battleInterval = requestAnimationFrame(frame);
+                }
 
-                    // Determine winner
-                    if (player.currentHealth <= 0 && enemy.currentHealth <= 0) {
-                        addLog('💀 IT\'S A DRAW! Both units fell! 💀', 'warning');
-                    } else if (player.currentHealth <= 0) {
-                        addLog(`💀 ${enemyUnit.name} VICTORIOUS! 💀`, 'error');
-                    } else {
-                        addLog(`🏆 ${playerUnit.name} VICTORIOUS! 🏆`, 'success');
+                function stopBattle() {
+                    if (battleActive) {
+                        battleActive = false;
+                        if (battleInterval) {
+                            cancelAnimationFrame(battleInterval);
+                            battleInterval = null;
+                        }
+                        addLog('⏸️ Battle stopped.', 'warning');
+                        fightBtn.disabled = false;
+                        stopBtn.disabled = true;
                     }
-
-                    battleActive = false;
-                    fightBtn.disabled = false;
                 }
 
                 // Event listeners
                 pullPlayerBtn.onclick = async () => {
+                    if (battleActive) stopBattle();
                     await loadUnits();
                     pullPlayer();
                     fightBtn.disabled = !(currentPlayer && currentEnemy);
                 };
                 pullEnemyBtn.onclick = async () => {
+                    if (battleActive) stopBattle();
                     await loadUnits();
                     pullEnemy();
                     fightBtn.disabled = !(currentPlayer && currentEnemy);
                 };
                 fightBtn.onclick = startBattle;
+                stopBtn.onclick = stopBattle;
 
-                // Initial load and optional auto-pull
                 loadUnits().then(() => {
                     if (allPlayerUnits.length) pullPlayer();
                     if (allCampaignUnits.length) pullEnemy();
