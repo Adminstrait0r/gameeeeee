@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gacha Pull</title>
+    <title>Gacha Pull - Random Stats</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Animation for pull */
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         .pulling {
             animation: spin 0.5s ease-in-out;
+        }
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.1rem;
         }
     </style>
 </head>
@@ -30,7 +33,7 @@
         <div class="max-w-md mx-auto bg-white rounded-xl shadow-2xl overflow-hidden mb-8">
             <div class="bg-indigo-600 text-white text-center py-4">
                 <h2 class="text-2xl font-bold">Pull a Unit</h2>
-                <p class="text-indigo-200">Click the button to draw a random unit</p>
+                <p class="text-indigo-200">Click the button to draw a random unit with random stats</p>
             </div>
             <div class="p-6">
                 <button id="pullBtn" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-400">
@@ -52,32 +55,32 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div class="bg-red-100 p-2 rounded text-center">
                         <span class="block text-xs text-red-600 uppercase">Health</span>
-                        <span id="unitHealth" class="font-bold text-red-700">-</span>
+                        <span id="unitHealth" class="stat-value text-red-700">-</span>
                     </div>
                     <div class="bg-orange-100 p-2 rounded text-center">
                         <span class="block text-xs text-orange-600 uppercase">Attack</span>
-                        <span id="unitAttack" class="font-bold text-orange-700">-</span>
+                        <span id="unitAttack" class="stat-value text-orange-700">-</span>
                     </div>
                     <div class="bg-green-100 p-2 rounded text-center">
                         <span class="block text-xs text-green-600 uppercase">Defense</span>
-                        <span id="unitDefense" class="font-bold text-green-700">-</span>
+                        <span id="unitDefense" class="stat-value text-green-700">-</span>
                     </div>
                     <div class="bg-blue-100 p-2 rounded text-center">
                         <span class="block text-xs text-blue-600 uppercase">Atk Speed</span>
-                        <span id="unitAtkSpeed" class="font-bold text-blue-700">-</span>
+                        <span id="unitAtkSpeed" class="stat-value text-blue-700">-</span>
                     </div>
                     <div class="bg-purple-100 p-2 rounded text-center">
                         <span class="block text-xs text-purple-600 uppercase">Crit %</span>
-                        <span id="unitCrit" class="font-bold text-purple-700">-</span>
+                        <span id="unitCrit" class="stat-value text-purple-700">-</span>
                     </div>
                     <div class="bg-gray-100 p-2 rounded text-center">
                         <span class="block text-xs text-gray-600 uppercase">Dodge %</span>
-                        <span id="unitDodge" class="font-bold text-gray-700">-</span>
+                        <span id="unitDodge" class="stat-value text-gray-700">-</span>
                     </div>
                 </div>
 
                 <div class="text-center text-sm text-gray-500 mt-4">
-                    Weight: <span id="unitWeight" class="font-mono"></span>
+                    Base Weight: <span id="unitWeight" class="font-mono"></span>
                 </div>
             </div>
         </div>
@@ -89,17 +92,14 @@
     </div>
 
     <script>
-        // Supabase configuration (same as before)
         const SUPABASE_URL = 'https://atcyykmikuidfitbgchw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_F7WF15HzgLDsfe0BU9tgpQ_zBz8Ympu';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // DOM elements
         const pullBtn = document.getElementById('pullBtn');
         const resultContainer = document.getElementById('resultContainer');
         const noUnitsMessage = document.getElementById('noUnitsMessage');
 
-        // Unit display elements
         const unitImage = document.getElementById('unitImage');
         const unitName = document.getElementById('unitName');
         const unitType = document.getElementById('unitType');
@@ -109,10 +109,15 @@
         const unitAtkSpeed = document.getElementById('unitAtkSpeed');
         const unitCrit = document.getElementById('unitCrit');
         const unitDodge = document.getElementById('unitDodge');
-        const unitWeight = document.getElementById('unitWeight');
+        const unitWeightSpan = document.getElementById('unitWeight');
         const weightBadge = document.getElementById('weightBadge');
 
-        let units = []; // Store all player units for pulling
+        let units = []; // store all player units
+
+        // Helper: random integer between min and max (inclusive)
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
         // Fetch player units from Supabase
         async function fetchPlayerUnits() {
@@ -120,13 +125,12 @@
                 const { data, error } = await supabaseClient
                     .from('gacha_units')
                     .select('*')
-                    .eq('category', 'player');  // only pullable units
+                    .eq('category', 'player');
 
                 if (error) throw error;
 
                 units = data || [];
                 if (units.length === 0) {
-                    // Show message and disable pull button
                     noUnitsMessage.classList.remove('hidden');
                     pullBtn.disabled = true;
                     pullBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -143,78 +147,74 @@
             }
         }
 
-        // Weighted random selection
+        // Weighted random selection based on gacha_weight
         function getRandomUnit(unitsArray) {
-            // Calculate total weight
             const totalWeight = unitsArray.reduce((sum, unit) => sum + unit.gacha_weight, 0);
-            if (totalWeight === 0) return unitsArray[0]; // fallback if all weights are 0
+            if (totalWeight === 0) return unitsArray[0];
 
-            // Generate random number between 0 and totalWeight
             let random = Math.random() * totalWeight;
             let cumulative = 0;
-
             for (const unit of unitsArray) {
                 cumulative += unit.gacha_weight;
-                if (random <= cumulative) {
-                    return unit;
-                }
+                if (random <= cumulative) return unit;
             }
-            return unitsArray[0]; // fallback
+            return unitsArray[0];
         }
 
-        // Display the pulled unit
-        function displayUnit(unit) {
-            // Image
-            if (unit.image_url) {
-                unitImage.src = unit.image_url;
-                unitImage.alt = unit.name;
-            } else {
-                unitImage.src = 'https://via.placeholder.com/400x200?text=No+Image';
-            }
+        // Generate random stats for the pulled unit
+        function rollStats(unit) {
+            return {
+                health: randomInt(unit.health_min, unit.health_max),
+                attack: randomInt(unit.attack_min, unit.attack_max),
+                defense: randomInt(unit.defense_min, unit.defense_max)
+            };
+        }
 
-            // Stats
+        // Display the pulled unit with rolled stats
+        function displayUnit(unit, rolledStats) {
+            // Image
+            unitImage.src = unit.image_url || 'https://via.placeholder.com/400x200?text=No+Image';
+            unitImage.alt = unit.name;
+
             unitName.textContent = unit.name;
             unitType.textContent = unit.type;
-            unitHealth.textContent = `${unit.health_min} - ${unit.health_max}`;
-            unitAttack.textContent = `${unit.attack_min} - ${unit.attack_max}`;
-            unitDefense.textContent = `${unit.defense_min} - ${unit.defense_max}`;
+
+            // Display rolled stats
+            unitHealth.textContent = rolledStats.health;
+            unitAttack.textContent = rolledStats.attack;
+            unitDefense.textContent = rolledStats.defense;
+
+            // Fixed stats
             unitAtkSpeed.textContent = unit.attack_speed;
             unitCrit.textContent = `${(unit.critical_chance * 100).toFixed(0)}%`;
             unitDodge.textContent = `${(unit.dodge_chance * 100).toFixed(0)}%`;
-            unitWeight.textContent = unit.gacha_weight;
+            unitWeightSpan.textContent = unit.gacha_weight;
             weightBadge.textContent = `Weight: ${unit.gacha_weight}`;
 
-            // Show the result card
             resultContainer.classList.remove('hidden');
         }
 
-        // Pull action with animation
+        // Perform the pull
         async function pull() {
             if (!units.length) return;
 
-            // Add spinning animation to button
             pullBtn.classList.add('pulling');
-            // Disable button during animation
             pullBtn.disabled = true;
 
-            // Simulate a short delay for suspense (optional)
+            // Simulate suspense (optional)
             await new Promise(resolve => setTimeout(resolve, 400));
 
             const selectedUnit = getRandomUnit(units);
-            displayUnit(selectedUnit);
+            const rolledStats = rollStats(selectedUnit);
+            displayUnit(selectedUnit, rolledStats);
 
-            // Remove animation and re-enable button
             pullBtn.classList.remove('pulling');
             pullBtn.disabled = false;
 
-            // Optional: scroll to result
             resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // Event listener
         pullBtn.addEventListener('click', pull);
-
-        // Initialize
         fetchPlayerUnits();
     </script>
 </body>
